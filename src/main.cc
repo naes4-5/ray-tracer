@@ -17,10 +17,10 @@ double collision(const Vec& cen, double rad, const Ray& ray) {
 
 int main() {
     // 1. IMAGE SETUP
-    const int image_width = 400 * 4;
-    const int image_height = 225 * 4; // Maintains 16:9 ratio
+    const int image_width = 400;
+    const int image_height = 225; // Maintains 16:9 ratio
 
-    std::ofstream imageFile("render.ppm");
+    std::ofstream imageFile("render_bg_test.ppm");
     imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
 
     // 2. CAMERA / VIEWPORT SETUP
