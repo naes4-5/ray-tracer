@@ -20,7 +20,7 @@ int main() {
     const int image_width = 400;
     const int image_height = 225; // Maintains 16:9 ratio
 
-    std::ofstream imageFile("render_bg_test.ppm");
+    std::ofstream imageFile("render_my_fav.ppm");
     imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
 
     // 2. CAMERA / VIEWPORT SETUP
@@ -30,6 +30,7 @@ int main() {
         viewport_height * (double(image_width) / image_height);
     double focal_length = 1.0; // Distance from camera to viewport
 
+    Vec sphere_center = Vec(0, 0, -1);
     Vec origin = Vec(0, 0, 0);
     Vec horizontal = Vec(viewport_width, 0, 0);
     Vec vertical = Vec(0, viewport_height, 0);
@@ -53,13 +54,13 @@ int main() {
             Ray r(origin, direction);
 
             // 4. COLOR DETERMINATION
-            double t = collision(Vec(0, 0, -1), 0.5, r);
+            double t = collision(sphere_center, 0.5, r);
 
             if (t > 0.0) {
                 // We hit the sphere!
                 // Find the hit point P and the surface normal N
                 Vec P = r.at(t);
-                Vec N = (P - Vec(0, 0, -1)).unit_vector();
+                Vec N = (P - sphere_center).unit_vector();
 
                 // Convert Normal direction (-1 to 1) to RGB (0 to 255)
                 int ir = static_cast<int>(255.999 * 0.5 * (N.x() + 1));
@@ -69,12 +70,12 @@ int main() {
             } else {
                 // Missed: Draw the background sky gradient
                 Vec unit_direction = r.dir.unit_vector();
-                auto t_bg = 0.5 * (unit_direction.y() + 1.0);
+                auto bg_r = 0.5 * (unit_direction.y() + 1.0);
 
                 int ir =
-                    static_cast<int>(255 * ((1.0 - t_bg) * 1.0 + t_bg * 0.5));
+                    static_cast<int>(255 * ((1.0 - bg_r) * 1.0 + bg_r * 0.6));
                 int ig =
-                    static_cast<int>(255 * ((1.0 - t_bg) * 1.0 + t_bg * 0.7));
+                    static_cast<int>(255 * ((1.0 - bg_r) * 1.0 + bg_r * 0.8));
                 int ib = 255;
                 imageFile << ir << " " << ig << " " << ib << "\n";
             }
