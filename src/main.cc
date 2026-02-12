@@ -13,7 +13,7 @@ int main() {
     const int image_width = 400;
     const int image_height = 225;
 
-    std::ofstream imageFile("out/render_impl_planes.ppm");
+    std::ofstream imageFile("out/render_temp.ppm");
     imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
 
     double viewport_height = 2.0;
@@ -24,6 +24,7 @@ int main() {
     HittableList objs{
         new Sphere(Vec(0.7, 0.2, -1), 0.3),
         new Sphere(Vec(-0.3, 0, -1), 0.4),
+        new Sphere(Vec(0.8, -0.3, -1), 0.2),
         new Plane(Vec(0, -0.5, 0), Vec(0, 1, 0)),
     };
 
