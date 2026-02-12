@@ -23,6 +23,7 @@ class Vec {
     double dot(const Vec& v) const {
         return e[0] * v.e[0] + e[1] * v.e[1] + e[2] * v.e[2];
     }
+
     double mag() const { return std::sqrt(dot(*this)); }
     Vec unit_vector() { return *this * (1.0 / mag()); }
 };

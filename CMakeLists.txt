@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-project(ray-tracer)
+project(RayTracer)
 
-# 1. Bring in the library logic
 add_subdirectory(../cust-cpp-vector cust-vector_build)
 
-# 2. Create your app
-add_executable(ray_tracer main.cc)
+add_executable(ray-tracer src/main.cc)
 
-# 3. Link the interface
-target_link_libraries(ray_tracer PRIVATE cust_vector_lib)
+target_include_directories(ray-tracer PRIVATE include)
+
+target_link_libraries(ray-tracer PRIVATE CustVector)
