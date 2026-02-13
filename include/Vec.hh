@@ -26,16 +26,17 @@ class Vec {
     }
 
     double mag() const { return std::sqrt(dot(*this)); }
-    Vec unit_vector() { return *this * (1.0 / mag()); }
+    Vec unit_vector() {
+        auto magnitude{mag()};
+        if (magnitude == 0)
+            return Vec(0, 0, 0);
+        return *this / magnitude;
+    }
     Vec cross(const Vec& v) const {
-        return Vec(e[1] * v.e[2] - e[2] * v.e[1], e[2] * v.e[0] - e[0] * v.e[2],
-                   e[0] * v.e[1] - e[1] * v.e[0]);
-        // Better formatted as follows:
-        //
-        // return Vec(
-        //     e[1] * v.e[2] - e[2] * v.e[1],
-        //     e[2] * v.e[0] - e[0] * v.e[2],
-        //     e[0] * v.e[1] - e[1] * v.e[0]
-        // );
+        return Vec{
+            e[1] * v.e[2] - e[2] * v.e[1],
+            e[2] * v.e[0] - e[0] * v.e[2],
+            e[0] * v.e[1] - e[1] * v.e[0],
+        };
     }
 };

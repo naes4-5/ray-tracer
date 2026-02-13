@@ -3,8 +3,8 @@
 
 class Ray {
   public:
-    Vec orig{};
-    Vec dir{};
+    Vec orig;
+    Vec dir;
 
     Ray(const Vec& origin, const Vec& direction)
         : orig(origin), dir(direction) {}

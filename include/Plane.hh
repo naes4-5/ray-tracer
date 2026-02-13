@@ -12,11 +12,11 @@ class Plane : public Hittable {
 
     virtual bool hit(const Ray& ray, const double t_min, const double t_max,
                      hit_record& rec) const override {
-        auto q_o = Q - ray.orig;
-        auto denom = ray.dir.dot(N);
+        auto q_o{Q - ray.orig};
+        auto denom{ray.dir.dot(N)};
         if (std::abs(denom) <= 1e-8)
             return false;
-        auto soln = q_o.dot(N) / denom;
+        auto soln{q_o.dot(N) / denom};
         if (soln < t_min || soln > t_max)
             return false;
         rec.t = soln;
