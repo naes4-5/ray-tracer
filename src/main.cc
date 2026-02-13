@@ -36,7 +36,7 @@ int main() {
 
     // rendering
     for (int j = image_height - 1; j >= 0; --j) {
-        std::cerr << "\rLines remaining: " << j << "  " << std::flush;
+        std::cerr << "\rLines remaining: " << j << " " << std::flush;
         for (int i = 0; i < image_width; ++i) {
             auto u{double(i) / (image_width - 1)};
             auto v{double(j) / (image_height - 1)};
