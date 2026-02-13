@@ -1,3 +1,4 @@
+#include "Camera.hh"
 #include "Hittable.hh"
 #include "HittableList.hh"
 #include "Plane.hh"
@@ -10,41 +11,37 @@
 
 int main() {
     // 16:9 ratio
-    const int image_width = 400;
-    const int image_height = 225;
+    const int image_width = 1920;
+    const int image_height = 1080;
 
     std::ofstream imageFile("out/render_temp.ppm");
     imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-    double viewport_height = 2.0;
-    double viewport_width =
-        viewport_height * (double(image_width) / image_height);
-    double focal_length = 1.0; // Distance from camera to viewport
+    Vec lookfrom(0, 0, 5); // Camera at origin
+    Vec lookat(0, 0, -1);  // Looking down the negative Z-axis
+    Vec vup(0, 1, 0);      // "Up" is toward the sky
+    double vfov{45.0};     // Height of 2.0
+    double aspect_ratio{double(image_width) / image_height};
+
+    Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
 
     HittableList objs{
         new Sphere(Vec(0.7, 0.2, -1), 0.3),
         new Sphere(Vec(-0.3, 0, -1), 0.4),
-        new Sphere(Vec(0.8, -0.3, -1), 0.2),
+        new Sphere(Vec(0.8, -0.3, -1.3), 0.2),
+        new Sphere(Vec(-1.5, 0.8, -1), 0.1),
+        new Sphere(Vec(-1.5, -1, 1), 1),
         new Plane(Vec(0, -0.5, 0), Vec(0, 1, 0)),
     };
-
-    Vec origin = Vec(0, 0, 0);
-    Vec horizontal = Vec(viewport_width, 0, 0);
-    Vec vertical = Vec(0, viewport_height, 0);
-
-    Vec lower_left_corner = origin - (horizontal * 0.5) - (vertical * 0.5) -
-                            Vec(0, 0, focal_length);
 
     // rendering
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rLines remaining: " << j << "  " << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            auto u = double(i) / (image_width - 1);
-            auto v = double(j) / (image_height - 1);
+            auto u{double(i) / (image_width - 1)};
+            auto v{double(j) / (image_height - 1)};
 
-            Vec direction =
-                lower_left_corner + (horizontal * u) + (vertical * v) - origin;
-            Ray r(origin, direction);
+            Ray r{cam.get_ray(u, v)};
 
             hit_record rec{};
 

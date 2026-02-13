@@ -19,6 +19,7 @@ class Vec {
     Vec operator*(const double t) const {
         return Vec(e[0] * t, e[1] * t, e[2] * t);
     }
+    Vec operator/(const double t) const { return *this * (1.0 / t); }
 
     double dot(const Vec& v) const {
         return e[0] * v.e[0] + e[1] * v.e[1] + e[2] * v.e[2];
@@ -26,4 +27,15 @@ class Vec {
 
     double mag() const { return std::sqrt(dot(*this)); }
     Vec unit_vector() { return *this * (1.0 / mag()); }
+    Vec cross(const Vec& v) const {
+        return Vec(e[1] * v.e[2] - e[2] * v.e[1], e[2] * v.e[0] - e[0] * v.e[2],
+                   e[0] * v.e[1] - e[1] * v.e[0]);
+        // Better formatted as follows:
+        //
+        // return Vec(
+        //     e[1] * v.e[2] - e[2] * v.e[1],
+        //     e[2] * v.e[0] - e[0] * v.e[2],
+        //     e[0] * v.e[1] - e[1] * v.e[0]
+        // );
+    }
 };
