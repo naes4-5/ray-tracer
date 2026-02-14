@@ -4,6 +4,7 @@
 #include "Plane.hh"
 #include "Ray.hh"
 #include "Sphere.hh"
+#include "Triangle.hh"
 #include <cmath>
 #include <cust_vector.hh>
 #include <fstream>
@@ -17,21 +18,22 @@ int main() {
     std::ofstream imageFile("out/render_temp.ppm");
     imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-    Vec lookfrom(0, 0, 5); // Camera at origin
-    Vec lookat(0, 0, -1);  // Looking down the negative Z-axis
-    Vec vup(0, 1, 0);      // "Up" is toward the sky
-    double vfov{45.0};     // Height of 2.0
+    Vec lookfrom(0, 0, 5);
+    Vec lookat(0, 0, 0);
+    Vec vup(0, 1, 0);
+    double vfov{45.0};
     double aspect_ratio{double(image_width) / image_height};
 
     Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
 
     HittableList objs{
-        new Sphere(Vec(0.7, 0.2, -1), 0.3),
-        new Sphere(Vec(-0.3, 0, -1), 0.4),
-        new Sphere(Vec(0.8, -0.3, -1.3), 0.2),
-        new Sphere(Vec(-1.5, 0.8, -1), 0.1),
+        new Sphere(Vec(0.7, 0.2, 1), 0.3),
+        new Sphere(Vec(-0.3, 0, 1), 0.4),
+        new Sphere(Vec(0.5, -0.6, 1.3), 0.2),
+        new Sphere(Vec(1.5, 0.8, 1), 0.1),
         new Sphere(Vec(-1.5, -1, 1), 1),
-        new Plane(Vec(0, -0.5, 0), Vec(0, 1, 0)),
+        new Triangle(Vec(1.5, 0, 0), Vec(2, 1, 1), Vec(3, -2, -0.5)),
+        new Plane(Vec(0, -1.5, 0), Vec(0.4, 1, 0)),
     };
 
     // rendering
