@@ -1,73 +1,110 @@
+#include "Abstract.hh"
 #include "Camera.hh"
-#include "Hittable.hh"
 #include "HittableList.hh"
+#include "Matte.hh"
 #include "Plane.hh"
-#include "Ray.hh"
 #include "Sphere.hh"
-#include "Triangle.hh"
+#include "util.hh"
+#include <algorithm>
+#include <chrono>
 #include <cmath>
-#include <cust_vector.hh>
 #include <fstream>
 #include <iostream>
 
+Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
+    hit_record rec;
+
+    // no light to gather at bounce limit
+    if (depth <= 0)
+        return Vec{};
+
+    if (world.hit(ray, 0.001, INFINITY, rec)) {
+        Ray scattered;
+        Vec attenuation;
+
+        if (rec.mat_ptr->scatter(ray, rec, attenuation, scattered)) {
+            return attenuation * ray_color(scattered, world, depth - 1);
+        }
+    }
+    Vec r_dir{ray.dir};
+    auto t{(r_dir.unit_vector().v + 1.0) * 0.5};
+    return Vec(1, 1, 1) * (1 - t) + Vec(0.5, 1.0, 1.0) * t;
+}
+
 int main() {
     // 16:9 ratio
-    const int image_width = 1920;
-    const int image_height = 1080;
+    const int image_width{1920};
+    const int image_height{1080};
 
     std::ofstream imageFile("out/render_temp.ppm");
     imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-    Vec lookfrom(0, 0, 5);
-    Vec lookat(0, 0, 0);
-    Vec vup(0, 1, 0);
-    double vfov{45.0};
-    double aspect_ratio{double(image_width) / image_height};
+    // camera
+    const Vec lookfrom(0, 0, 5);
+    const Vec lookat(0, 0, 0);
+    const Vec vup(0, 1, 0);
+    const double vfov{45.0};
+    const double aspect_ratio{double(image_width) / image_height};
 
-    Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
+    const Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
+
+    // colors
+    auto mat_red{std::make_shared<Matte>(Vec(0.7, 0.3, 0.3))};
+    auto mat_grn{std::make_shared<Matte>(Vec(0.1, 0.7, 0.5))};
+    auto mat_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
+    auto mat_pur{std::make_shared<Matte>(Vec(0.3, 0.0, 0.9))};
+    auto mat_wht{std::make_shared<Matte>(Vec(1.0, 1.0, 1.0))};
 
     HittableList objs{
-        new Sphere(Vec(0.7, 0.2, 1), 0.3),
-        new Sphere(Vec(-0.3, 0, 1), 0.4),
-        new Sphere(Vec(0.5, -0.6, 1.3), 0.2),
-        new Sphere(Vec(1.5, 0.8, 1), 0.1),
-        new Sphere(Vec(-1.5, -1, 1), 1),
-        new Triangle(Vec(1.5, 0, 0), Vec(2, 1, 1), Vec(3, -2, -0.5)),
-        new Plane(Vec(0, -1.5, 0), Vec(0.4, 1, 0)),
+        new Plane{Vec(0, -1, 0), Vec(0, 1, 0), mat_red}, // floor
+        new Plane{Vec(0, 0, -5), Vec(0, 0, 1), mat_grn}, // back wall
+        new Sphere{Vec(-1, -0.5, -1), 0.5, mat_blu},
+        new Sphere{Vec(0.5, -0.2, -2), 0.8, mat_pur},
+        new Sphere{Vec(2, -0.4, 0), 0.6, mat_wht},
     };
 
-    // rendering
+    const int samples_per_pixel{30};
+
+    auto start{std::chrono::high_resolution_clock::now()};
     for (int j = image_height - 1; j >= 0; --j) {
-        std::cerr << "\rLines remaining: " << j << " " << std::flush;
+        std::cerr << "\rLines remaining: " << j << "  " << std::flush;
+        std::vector<Vec> row_buff(image_width);
         for (int i = 0; i < image_width; ++i) {
-            auto u{double(i) / (image_width - 1)};
-            auto v{double(j) / (image_height - 1)};
 
-            Ray r{cam.get_ray(u, v)};
+            Vec pixel_color(0, 0, 0); // An empty "color bucket" for this pixel
 
-            hit_record rec{};
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u =
+                    (double(i) + random_double(0, 1)) / double(image_width);
+                auto v =
+                    (double(j) + random_double(0, 1)) / double(image_height);
 
-            if (objs.hit(r, 0.001, INFINITY, rec)) {
-
-                // Convert Normal direction (-1 to 1) to RGB
-                int ir = static_cast<int>(255.999 * 0.5 * (rec.N.x() + 1));
-                int ig = static_cast<int>(255.999 * 0.5 * (rec.N.y() + 1));
-                int ib = static_cast<int>(255.999 * 0.5 * (rec.N.z() + 1));
-                imageFile << ir << " " << ig << " " << ib << "\n";
-            } else {
-                // Missed: Draw the background sky gradient
-                Vec unit_direction = r.dir.unit_vector();
-                auto bg_r = 0.5 * (unit_direction.y() + 1.0);
-
-                int ir =
-                    static_cast<int>(255 * ((1.0 - bg_r) * 1.0 + bg_r * 0.6));
-                int ig =
-                    static_cast<int>(255 * ((1.0 - bg_r) * 1.0 + bg_r * 0.8));
-                int ib = 255;
-                imageFile << ir << " " << ig << " " << ib << "\n";
+                Ray r = cam.get_ray(u, v);
+                // Add this sample to our bucket
+                pixel_color += ray_color(r, objs, 15);
+                row_buff[i] = pixel_color;
             }
         }
+        double scale = 1.0 / samples_per_pixel;
+
+        for (const Vec& pixel_c : row_buff) {
+            double r = std::sqrt(scale * pixel_c.u);
+            double g = std::sqrt(scale * pixel_c.v);
+            double b = std::sqrt(scale * pixel_c.w);
+
+            imageFile << static_cast<int>(256 * std::clamp(r, 0.0, 0.999))
+                      << " "
+                      << static_cast<int>(256 * std::clamp(g, 0.0, 0.999))
+                      << " "
+                      << static_cast<int>(256 * std::clamp(b, 0.0, 0.999))
+                      << " ";
+        }
     }
-    std::cerr << '\n';
+    imageFile.flush();
+    imageFile.close();
+    auto end{std::chrono::high_resolution_clock::now()};
+    auto elapsed{
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)};
+    std::cerr << "\nTook " << elapsed.count() / 1000 << " seconds" << std::endl;
     return 0;
 }

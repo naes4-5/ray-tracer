@@ -5,6 +5,11 @@ add_subdirectory(../cust-cpp-vector cust-vector_build)
 
 add_executable(ray-tracer src/main.cc)
 
-target_include_directories(ray-tracer PRIVATE include)
+target_include_directories(ray-tracer PRIVATE
+    "include"
+    "include/WorldBuilding"
+    "include/Materials"
+    "include/Shapes"
+)
 
 target_link_libraries(ray-tracer PRIVATE CustVector)
