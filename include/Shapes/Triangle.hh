@@ -1,16 +1,21 @@
-#include "Hittable.hh"
+#pragma once
+#include "Abstract.hh"
 #include "Plane.hh"
+
 class Triangle : public Hittable {
   public:
     Vec A, B, C;
     Vec N;
     Plane P;
+    std::shared_ptr<Material> mat_ptr;
 
-    Triangle(const Vec& a, const Vec& b, const Vec& c) : A(a), B(b), C(c) {
+    Triangle(const Vec& a, const Vec& b, const Vec& c,
+             std::shared_ptr<Material> mat)
+        : A(a), B(b), C(c), mat_ptr(mat) {
         Vec v{B - A};
         Vec u{C - A};
         N = v.cross(u).unit_vector();
-        P = Plane{A, N};
+        P = Plane{A, N, mat};
     }
 
     virtual bool hit(const Ray& ray, const double t_min, const double t_max,

@@ -6,6 +6,7 @@ class Ray {
     Vec orig;
     Vec dir;
 
+    Ray() : orig(Vec{}), dir(Vec{0, 1, 0}) {}
     Ray(const Vec& origin, const Vec& direction)
         : orig(origin), dir(direction) {}
 

@@ -1,3 +1,4 @@
+#pragma once
 #include "Ray.hh"
 #include <cmath>
 

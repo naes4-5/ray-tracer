@@ -1,5 +1,5 @@
 #pragma once
-#include "Hittable.hh"
+#include "Abstract.hh"
 #include <cust_vector.hh>
 
 class HittableList : public Hittable {

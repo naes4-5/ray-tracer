@@ -1,13 +1,16 @@
 #pragma once
-#include "Hittable.hh"
+#include "Abstract.hh"
 #include <cmath>
+#include <memory>
 
 class Sphere : public Hittable {
   public:
     Vec center;
     double rad;
+    std::shared_ptr<Material> mat_ptr;
 
-    Sphere(const Vec c, double r) : center(c), rad(r) {}
+    Sphere(const Vec c, double r, std::shared_ptr<Material> mat)
+        : center(c), rad(r), mat_ptr(mat) {}
 
     virtual bool hit(const Ray& ray, const double t_min, const double t_max,
                      hit_record& rec) const override {
@@ -28,6 +31,7 @@ class Sphere : public Hittable {
         rec.t = soln;
         rec.P = ray.at(rec.t);
         rec.N = (rec.P - center).unit_vector();
+        rec.mat_ptr = mat_ptr;
         return true;
     }
 };
