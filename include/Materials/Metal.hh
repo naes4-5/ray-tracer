@@ -1,11 +1,11 @@
-#pragma once
 #include "Hittable/Material.hh"
 
-class Matte : public Material {
+class Metal : public Material {
   public:
     Vec albedo;
+    double fuzz;
 
-    Matte(const Vec& c);
+    Metal(const Vec& c, const double f);
 
     virtual bool scatter(const Ray& ray_in, hit_record& rec, Vec& attenuation,
                          Ray& scattered) const override;

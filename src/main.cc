@@ -1,17 +1,18 @@
-#include "Abstract.hh"
-#include "Camera.hh"
-#include "HittableList.hh"
-#include "Matte.hh"
-#include "Plane.hh"
-#include "Ray.hh"
-#include "Sphere.hh"
-#include "Vec.hh"
+#include "Hittable/Hittable.hh"
+#include "Materials/Matte.hh"
+#include "Shapes/Plane.hh"
+#include "Shapes/Sphere.hh"
+#include "WorldBuilding/Camera.hh"
+#include "WorldBuilding/HittableList.hh"
+#include "WorldBuilding/Ray.hh"
+#include "WorldBuilding/Vec.hh"
 #include "util.hh"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
     // no light to gather at bounce limit

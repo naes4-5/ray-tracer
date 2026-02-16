@@ -1,14 +1,13 @@
 #pragma once
-#include "Vec.hh"
+#include "WorldBuilding/Vec.hh"
 
 class Ray {
   public:
     Vec orig;
     Vec dir;
 
-    Ray() : orig(Vec{}), dir(Vec{0, 1, 0}) {}
-    Ray(const Vec& origin, const Vec& direction)
-        : orig(origin), dir(direction) {}
+    Ray();
+    Ray(const Vec& origin, const Vec& direction);
 
-    Vec at(double t) const { return orig + (dir * t); }
+    Vec at(double t) const;
 };
