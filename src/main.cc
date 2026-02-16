@@ -3,7 +3,9 @@
 #include "HittableList.hh"
 #include "Matte.hh"
 #include "Plane.hh"
+#include "Ray.hh"
 #include "Sphere.hh"
+#include "Vec.hh"
 #include "util.hh"
 #include <algorithm>
 #include <chrono>
@@ -12,12 +14,10 @@
 #include <iostream>
 
 Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
-    hit_record rec;
-
     // no light to gather at bounce limit
     if (depth <= 0)
         return Vec{};
-
+    hit_record rec;
     if (world.hit(ray, 0.001, INFINITY, rec)) {
         Ray scattered;
         Vec attenuation;
@@ -36,8 +36,8 @@ int main() {
     const int image_width{1920};
     const int image_height{1080};
 
-    std::ofstream imageFile("out/render_temp.ppm");
-    imageFile << "P3\n" << image_width << " " << image_height << "\n255\n";
+    std::ofstream image_file("out/render_temp.ppm");
+    image_file << "P3\n" << image_width << " " << image_height << "\n255\n";
 
     // camera
     const Vec lookfrom(0, 0, 5);
@@ -49,18 +49,18 @@ int main() {
     const Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
 
     // colors
-    auto mat_red{std::make_shared<Matte>(Vec(0.7, 0.3, 0.3))};
-    auto mat_grn{std::make_shared<Matte>(Vec(0.1, 0.7, 0.5))};
-    auto mat_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
-    auto mat_pur{std::make_shared<Matte>(Vec(0.3, 0.0, 0.9))};
-    auto mat_wht{std::make_shared<Matte>(Vec(1.0, 1.0, 1.0))};
+    auto matte_red{std::make_shared<Matte>(Vec(0.7, 0.3, 0.3))};
+    auto matte_grn{std::make_shared<Matte>(Vec(0.1, 0.7, 0.5))};
+    auto matte_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
+    auto matte_pur{std::make_shared<Matte>(Vec(0.3, 0.0, 0.9))};
+    auto matte_wht{std::make_shared<Matte>(Vec(1.0, 1.0, 1.0))};
 
     HittableList objs{
-        new Plane{Vec(0, -1, 0), Vec(0, 1, 0), mat_red}, // floor
-        new Plane{Vec(0, 0, -5), Vec(0, 0, 1), mat_grn}, // back wall
-        new Sphere{Vec(-1, -0.5, -1), 0.5, mat_blu},
-        new Sphere{Vec(0.5, -0.2, -2), 0.8, mat_pur},
-        new Sphere{Vec(2, -0.4, 0), 0.6, mat_wht},
+        new Plane{Vec(0, -1, 0), Vec(0, 1, 0), matte_red}, // floor
+        new Plane{Vec(0, 0, -5), Vec(0, 0, 1), matte_grn}, // back wall
+        new Sphere{Vec(-1, -0.5, -1), 0.5, matte_blu},
+        new Sphere{Vec(0.5, -0.2, -2), 0.8, matte_pur},
+        new Sphere{Vec(2, -0.4, 0), 0.6, matte_wht},
     };
 
     const int samples_per_pixel{30};
@@ -92,16 +92,16 @@ int main() {
             double g = std::sqrt(scale * pixel_c.v);
             double b = std::sqrt(scale * pixel_c.w);
 
-            imageFile << static_cast<int>(256 * std::clamp(r, 0.0, 0.999))
-                      << " "
-                      << static_cast<int>(256 * std::clamp(g, 0.0, 0.999))
-                      << " "
-                      << static_cast<int>(256 * std::clamp(b, 0.0, 0.999))
-                      << " ";
+            image_file << static_cast<int>(256 * std::clamp(r, 0.0, 0.999))
+                       << " "
+                       << static_cast<int>(256 * std::clamp(g, 0.0, 0.999))
+                       << " "
+                       << static_cast<int>(256 * std::clamp(b, 0.0, 0.999))
+                       << " ";
         }
     }
-    imageFile.flush();
-    imageFile.close();
+    image_file.flush();
+    image_file.close();
     auto end{std::chrono::high_resolution_clock::now()};
     auto elapsed{
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)};
