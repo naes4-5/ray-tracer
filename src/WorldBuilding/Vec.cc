@@ -7,6 +7,7 @@ Vec::Vec(const double x, const double y, const double z) : u(x), v(y), w(z) {}
 Vec Vec::operator+(const Vec& l) const {
     return Vec(u + l.u, v + l.v, w + l.w);
 }
+Vec Vec::operator+(const double l) const { return Vec(u + l, v + l, w + l); }
 Vec Vec::operator-(const Vec& l) const {
     return Vec(u - l.u, v - l.v, w - l.w);
 }
@@ -28,7 +29,7 @@ Vec& Vec::operator+=(const Vec& l) {
 double Vec::dot(const Vec& l) const { return u * l.u + v * l.v + w * l.w; }
 
 double Vec::mag() const { return std::sqrt(dot(*this)); }
-Vec Vec::unit_vector() {
+Vec Vec::unit_vector() const {
     auto magnitude{mag()};
     if (magnitude == 0)
         return Vec(0, 0, 0);

@@ -21,8 +21,8 @@ bool Sphere::hit(const Ray& ray, const double t_min, const double t_max,
         }
     }
     rec.t = soln;
-    rec.P = ray.at(rec.t);
-    rec.N = (rec.P - center).unit_vector();
+    rec.N = (ray.at(rec.t) - center).unit_vector();
+    rec.P = ray.at(rec.t) + rec.N * 0.001;
     rec.mat_ptr = mat_ptr;
     return true;
 }

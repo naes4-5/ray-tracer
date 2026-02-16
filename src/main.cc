@@ -1,5 +1,6 @@
 #include "Hittable/Hittable.hh"
 #include "Materials/Matte.hh"
+#include "Materials/Metal.hh"
 #include "Shapes/Plane.hh"
 #include "Shapes/Sphere.hh"
 #include "WorldBuilding/Camera.hh"
@@ -12,6 +13,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <omp.h>
 #include <vector>
 
 Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
@@ -19,7 +21,7 @@ Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
     if (depth <= 0)
         return Vec{};
     hit_record rec;
-    if (world.hit(ray, 0.001, INFINITY, rec)) {
+    if (world.hit(ray, 0.01, 1e18, rec)) {
         Ray scattered;
         Vec attenuation;
 
@@ -27,8 +29,7 @@ Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
             return attenuation * ray_color(scattered, world, depth - 1);
         }
     }
-    Vec r_dir{ray.dir};
-    auto t{(r_dir.unit_vector().v + 1.0) * 0.5};
+    auto t{(ray.dir.unit_vector().v + 1.0) * 0.5};
     return Vec(1, 1, 1) * (1 - t) + Vec(0.5, 1.0, 1.0) * t;
 }
 
@@ -37,8 +38,7 @@ int main() {
     const int image_width{1920};
     const int image_height{1080};
 
-    std::ofstream image_file("out/render_temp.ppm");
-    image_file << "P3\n" << image_width << " " << image_height << "\n255\n";
+    std::vector<Vec> image_buff(image_width * image_height);
 
     // camera
     const Vec lookfrom(0, 0, 5);
@@ -53,22 +53,25 @@ int main() {
     auto matte_red{std::make_shared<Matte>(Vec(0.7, 0.3, 0.3))};
     auto matte_grn{std::make_shared<Matte>(Vec(0.1, 0.7, 0.5))};
     auto matte_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
-    auto matte_pur{std::make_shared<Matte>(Vec(0.3, 0.0, 0.9))};
-    auto matte_wht{std::make_shared<Matte>(Vec(1.0, 1.0, 1.0))};
+    auto metal_slv{std::make_shared<Metal>(Vec(0.8, 0.8, 0.8), 0.1)};
+    auto metal_gld{std::make_shared<Metal>(Vec(0.8, 0.6, 0.2), 0.2)};
 
     HittableList objs{
         new Plane{Vec(0, -1, 0), Vec(0, 1, 0), matte_red}, // floor
         new Plane{Vec(0, 0, -5), Vec(0, 0, 1), matte_grn}, // back wall
         new Sphere{Vec(-1, -0.5, -1), 0.5, matte_blu},
-        new Sphere{Vec(0.5, -0.2, -2), 0.8, matte_pur},
-        new Sphere{Vec(2, -0.4, 0), 0.6, matte_wht},
+        new Sphere{Vec(0.5, -0.2, -2), 0.8, metal_slv},
+        new Sphere{Vec(2, -0.4, 0), 0.6, metal_gld},
     };
 
     const int samples_per_pixel{30};
 
     auto start{std::chrono::high_resolution_clock::now()};
+
+    std::cout << "Threads available: " << omp_get_max_threads() << std::endl;
+    omp_set_num_threads(omp_get_max_threads());
+#pragma omp parallel for schedule(dynamic)
     for (int j = image_height - 1; j >= 0; --j) {
-        std::cerr << "\rLines remaining: " << j << "  " << std::flush;
         std::vector<Vec> row_buff(image_width);
         for (int i = 0; i < image_width; ++i) {
 
@@ -81,31 +84,39 @@ int main() {
                     (double(j) + random_double(0, 1)) / double(image_height);
 
                 Ray r = cam.get_ray(u, v);
-                // Add this sample to our bucket
                 pixel_color += ray_color(r, objs, 15);
-                row_buff[i] = pixel_color;
             }
+
+            row_buff[i] = pixel_color;
         }
-        double scale = 1.0 / samples_per_pixel;
-
-        for (const Vec& pixel_c : row_buff) {
-            double r = std::sqrt(scale * pixel_c.u);
-            double g = std::sqrt(scale * pixel_c.v);
-            double b = std::sqrt(scale * pixel_c.w);
-
-            image_file << static_cast<int>(256 * std::clamp(r, 0.0, 0.999))
-                       << " "
-                       << static_cast<int>(256 * std::clamp(g, 0.0, 0.999))
-                       << " "
-                       << static_cast<int>(256 * std::clamp(b, 0.0, 0.999))
-                       << " ";
+        for (int i{}; i < image_width; ++i) {
+            int ind{(image_height - 1 - j) * image_width + i};
+            image_buff[ind] = row_buff[i];
         }
     }
-    image_file.flush();
-    image_file.close();
+
     auto end{std::chrono::high_resolution_clock::now()};
     auto elapsed{
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)};
     std::cerr << "\nTook " << elapsed.count() / 1000 << " seconds" << std::endl;
+
+    std::ofstream image_file("out/render_temp.ppm");
+
+    image_file << "P3\n" << image_width << " " << image_height << "\n255\n";
+
+    double scale = 1.0 / samples_per_pixel;
+
+    for (const Vec& pixel_c : image_buff) {
+        double r = std::sqrt(scale * pixel_c.u);
+        double g = std::sqrt(scale * pixel_c.v);
+        double b = std::sqrt(scale * pixel_c.w);
+
+        image_file << static_cast<int>(256 * std::clamp(r, 0.0, 0.999)) << " "
+                   << static_cast<int>(256 * std::clamp(g, 0.0, 0.999)) << " "
+                   << static_cast<int>(256 * std::clamp(b, 0.0, 0.999)) << " ";
+    }
+
+    image_file.flush();
+    image_file.close();
     return 0;
 }

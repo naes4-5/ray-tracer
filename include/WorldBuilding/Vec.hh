@@ -8,6 +8,7 @@ class Vec {
     Vec(const double x, const double y, const double z);
 
     Vec operator+(const Vec& l) const;
+    Vec operator+(const double l) const;
     Vec operator-(const Vec& l) const;
     Vec operator*(const double t) const;
     Vec operator*(const Vec& l);
@@ -17,6 +18,6 @@ class Vec {
     double dot(const Vec& l) const;
 
     double mag() const;
-    Vec unit_vector();
+    Vec unit_vector() const;
     Vec cross(const Vec& l) const;
 };
