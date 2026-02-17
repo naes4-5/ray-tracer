@@ -50,11 +50,12 @@ int main() {
     const Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
 
     // colors
-    auto matte_red{std::make_shared<Matte>(Vec(0.7, 0.3, 0.3))};
-    auto matte_grn{std::make_shared<Matte>(Vec(0.1, 0.7, 0.5))};
-    auto matte_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
-    auto metal_slv{std::make_shared<Metal>(Vec(0.8, 0.8, 0.8), 0.1)};
-    auto metal_gld{std::make_shared<Metal>(Vec(0.8, 0.6, 0.2), 0.2)};
+    const auto matte_red{std::make_shared<Matte>(Vec(0.7, 0.3, 0.3))};
+    const auto matte_grn{std::make_shared<Matte>(Vec(0.1, 0.7, 0.5))};
+    const auto matte_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
+    const auto matte_prp{std::make_shared<Matte>(Vec(0.5, 0.1, 0.9))};
+    const auto metal_slv{std::make_shared<Metal>(Vec(0.8, 0.8, 0.8), 0.1)};
+    const auto metal_gld{std::make_shared<Metal>(Vec(0.8, 0.6, 0.2), 0.2)};
 
     HittableList objs{
         new Plane{Vec(0, -1, 0), Vec(0, 1, 0), matte_red}, // floor
@@ -62,11 +63,12 @@ int main() {
         new Sphere{Vec(-1, -0.5, -1), 0.5, matte_blu},
         new Sphere{Vec(0.5, -0.2, -2), 0.8, metal_slv},
         new Sphere{Vec(2, -0.4, 0), 0.6, metal_gld},
+        new Sphere{Vec(-2, -0.6, 1), 0.4, matte_prp},
     };
 
     const int samples_per_pixel{30};
 
-    auto start{std::chrono::high_resolution_clock::now()};
+    const auto start{std::chrono::high_resolution_clock::now()};
 
     std::cout << "Threads available: " << omp_get_max_threads() << std::endl;
     omp_set_num_threads(omp_get_max_threads());
@@ -78,12 +80,12 @@ int main() {
             Vec pixel_color(0, 0, 0); // An empty "color bucket" for this pixel
 
             for (int s = 0; s < samples_per_pixel; ++s) {
-                auto u =
+                const auto u =
                     (double(i) + random_double(0, 1)) / double(image_width);
-                auto v =
+                const auto v =
                     (double(j) + random_double(0, 1)) / double(image_height);
 
-                Ray r = cam.get_ray(u, v);
+                const Ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, objs, 15);
             }
 
@@ -95,8 +97,8 @@ int main() {
         }
     }
 
-    auto end{std::chrono::high_resolution_clock::now()};
-    auto elapsed{
+    const auto end{std::chrono::high_resolution_clock::now()};
+    const auto elapsed{
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)};
     std::cerr << "\nTook " << elapsed.count() / 1000 << " seconds" << std::endl;
 
@@ -104,12 +106,12 @@ int main() {
 
     image_file << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-    double scale = 1.0 / samples_per_pixel;
+    const double scale = 1.0 / samples_per_pixel;
 
     for (const Vec& pixel_c : image_buff) {
-        double r = std::sqrt(scale * pixel_c.u);
-        double g = std::sqrt(scale * pixel_c.v);
-        double b = std::sqrt(scale * pixel_c.w);
+        const double r = std::sqrt(scale * pixel_c.u);
+        const double g = std::sqrt(scale * pixel_c.v);
+        const double b = std::sqrt(scale * pixel_c.w);
 
         image_file << static_cast<int>(256 * std::clamp(r, 0.0, 0.999)) << " "
                    << static_cast<int>(256 * std::clamp(g, 0.0, 0.999)) << " "
