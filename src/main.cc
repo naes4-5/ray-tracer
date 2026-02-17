@@ -35,17 +35,17 @@ Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
 
 int main() {
     // 16:9 ratio
-    const int image_width{1920};
-    const int image_height{1080};
+    const int img_width{480};
+    const int img_height{270};
 
-    std::vector<Vec> image_buff(image_width * image_height);
+    std::vector<Vec> img_buff(img_width * img_height);
 
     // camera
     const Vec lookfrom(0, 0, 5);
     const Vec lookat(0, 0, 0);
     const Vec vup(0, 1, 0);
     const double vfov{45.0};
-    const double aspect_ratio{double(image_width) / image_height};
+    const double aspect_ratio{double(img_width) / img_height};
 
     const Camera cam(lookfrom, lookat, vup, vfov, aspect_ratio);
 
@@ -73,17 +73,17 @@ int main() {
     std::cout << "Threads available: " << omp_get_max_threads() << std::endl;
     omp_set_num_threads(omp_get_max_threads());
 #pragma omp parallel for schedule(dynamic)
-    for (int j = image_height - 1; j >= 0; --j) {
-        std::vector<Vec> row_buff(image_width);
-        for (int i = 0; i < image_width; ++i) {
+    for (int j = img_height - 1; j >= 0; --j) {
+        std::vector<Vec> row_buff(img_width);
+        for (int i = 0; i < img_width; ++i) {
 
             Vec pixel_color(0, 0, 0); // An empty "color bucket" for this pixel
 
             for (int s = 0; s < samples_per_pixel; ++s) {
                 const auto u =
-                    (double(i) + random_double(0, 1)) / double(image_width);
+                    (double(i) + random_double(0, 1)) / double(img_width);
                 const auto v =
-                    (double(j) + random_double(0, 1)) / double(image_height);
+                    (double(j) + random_double(0, 1)) / double(img_height);
 
                 const Ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, objs, 15);
@@ -91,9 +91,9 @@ int main() {
 
             row_buff[i] = pixel_color;
         }
-        for (int i{}; i < image_width; ++i) {
-            int ind{(image_height - 1 - j) * image_width + i};
-            image_buff[ind] = row_buff[i];
+        for (int i{}; i < img_width; ++i) {
+            int ind{(img_height - 1 - j) * img_width + i};
+            img_buff[ind] = row_buff[i];
         }
     }
 
@@ -102,23 +102,23 @@ int main() {
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)};
     std::cerr << "\nTook " << elapsed.count() / 1000 << " seconds" << std::endl;
 
-    std::ofstream image_file("out/render_temp.ppm");
+    std::ofstream img_file("render_recent.ppm");
 
-    image_file << "P3\n" << image_width << " " << image_height << "\n255\n";
+    img_file << "P3\n" << img_width << " " << img_height << "\n255\n";
 
     const double scale = 1.0 / samples_per_pixel;
 
-    for (const Vec& pixel_c : image_buff) {
+    for (const Vec& pixel_c : img_buff) {
         const double r = std::sqrt(scale * pixel_c.u);
         const double g = std::sqrt(scale * pixel_c.v);
         const double b = std::sqrt(scale * pixel_c.w);
 
-        image_file << static_cast<int>(256 * std::clamp(r, 0.0, 0.999)) << " "
-                   << static_cast<int>(256 * std::clamp(g, 0.0, 0.999)) << " "
-                   << static_cast<int>(256 * std::clamp(b, 0.0, 0.999)) << " ";
+        img_file << static_cast<int>(256 * std::clamp(r, 0.0, 0.999)) << " "
+                 << static_cast<int>(256 * std::clamp(g, 0.0, 0.999)) << " "
+                 << static_cast<int>(256 * std::clamp(b, 0.0, 0.999)) << " ";
     }
 
-    image_file.flush();
-    image_file.close();
+    img_file.flush();
+    img_file.close();
     return 0;
 }
