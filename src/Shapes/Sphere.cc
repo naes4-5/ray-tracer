@@ -1,4 +1,5 @@
 #include "Shapes/Sphere.hh"
+#include "util.hh"
 #include <cmath>
 
 Sphere::Sphere(const Vec c, double r, std::shared_ptr<Material> mat)
@@ -24,5 +25,6 @@ bool Sphere::hit(const Ray& ray, const double t_min, const double t_max,
     rec.N = (ray.at(rec.t) - center).unit_vector();
     rec.P = ray.at(rec.t) + rec.N * 0.001;
     rec.mat_ptr = mat_ptr;
+    rec.front_face = hit_outside(rec.P, rec.N);
     return true;
 }

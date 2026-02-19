@@ -5,10 +5,11 @@
 class Material;
 
 struct hit_record {
-    double t;
-    Vec P;
-    Vec N;
     std::shared_ptr<Material> mat_ptr;
+    Vec P;
+    Vec N; // outward
+    double t;
+    bool front_face;
 };
 
 class Hittable {

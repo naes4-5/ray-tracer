@@ -1,8 +1,10 @@
 #include "Hittable/Hittable.hh"
+#include "Materials/Dielectric.hh"
 #include "Materials/Matte.hh"
 #include "Materials/Metal.hh"
 #include "Shapes/Plane.hh"
 #include "Shapes/Sphere.hh"
+#include "Shapes/Triangle.hh"
 #include "WorldBuilding/Camera.hh"
 #include "WorldBuilding/HittableList.hh"
 #include "WorldBuilding/Ray.hh"
@@ -35,8 +37,8 @@ Vec ray_color(const Ray& ray, const HittableList& world, const int depth) {
 
 int main() {
     // 16:9 ratio
-    const int img_width{480};
-    const int img_height{270};
+    const int img_width{1920};
+    const int img_height{1080};
 
     std::vector<Vec> img_buff(img_width * img_height);
 
@@ -55,22 +57,24 @@ int main() {
     const auto matte_blu{std::make_shared<Matte>(Vec(0.2, 0.3, 0.6))};
     const auto matte_prp{std::make_shared<Matte>(Vec(0.5, 0.1, 0.9))};
     const auto metal_slv{std::make_shared<Metal>(Vec(0.8, 0.8, 0.8), 0.1)};
-    const auto metal_gld{std::make_shared<Metal>(Vec(0.8, 0.6, 0.2), 0.2)};
+    const auto metal_gld{std::make_shared<Metal>(Vec(0.8, 0.6, 0.2), 0.0)};
+    const auto glass{std::make_shared<Dielectric>(1.5)};
 
     HittableList objs{
-        new Plane{Vec(0, -1, 0), Vec(0, 1, 0), matte_red}, // floor
-        new Plane{Vec(0, 0, -5), Vec(0, 0, 1), matte_grn}, // back wall
-        new Sphere{Vec(-1, -0.5, -1), 0.5, matte_blu},
-        new Sphere{Vec(0.5, -0.2, -2), 0.8, metal_slv},
-        new Sphere{Vec(2, -0.4, 0), 0.6, metal_gld},
-        new Sphere{Vec(-2, -0.6, 1), 0.4, matte_prp},
+        new Plane{Vec(0, -1, 0), Vec(0, 1, 0), matte_red},      // floor
+        new Plane{Vec(0, 0.0, -5.0), Vec(0, 0, -1), matte_grn}, // back wall
+        new Sphere{Vec(0, 0, -1.5), 0.5, glass},
+
+        new Sphere{Vec(0.5, -0.2, -2.5), 0.8, metal_slv},
+        new Sphere{Vec(-1.0, -0.5, -1.0), 0.5, matte_blu},
+        new Sphere{Vec(1.5, -0.4, -0.5), 0.6, metal_gld},
     };
 
     const int samples_per_pixel{30};
 
     const auto start{std::chrono::high_resolution_clock::now()};
 
-    std::cout << "Threads available: " << omp_get_max_threads() << std::endl;
+    std::cout << "Threads available: " << omp_get_max_threads();
     omp_set_num_threads(omp_get_max_threads());
 #pragma omp parallel for schedule(dynamic)
     for (int j = img_height - 1; j >= 0; --j) {

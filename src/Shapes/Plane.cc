@@ -1,4 +1,5 @@
 #include "Shapes/Plane.hh"
+#include "util.hh"
 #include <cstdlib>
 
 Plane::Plane() : N(0, 1, 0), Q(0, 0, 0) {}
@@ -19,5 +20,6 @@ bool Plane::hit(const Ray& ray, const double t_min, const double t_max,
     rec.P = ray.at(rec.t);
     rec.N = N;
     rec.mat_ptr = mat_ptr;
+    rec.front_face = hit_outside(rec.P, rec.N);
     return true;
 }
